@@ -17,6 +17,7 @@ private:
 
     sf::CircleShape _vertexShape;
     sf::Vertex _linePreview[2];
+    const Vertex * _selection;
     sf::Vertex _edgeShape[2];
 
     std::map<Vertex, sf::Vector2f > _vertices;
@@ -28,7 +29,6 @@ public:
     void setGraph(Graph & graph);
 
     bool treatEvents();
-    void synchronize();
     void draw();
 };
 #endif

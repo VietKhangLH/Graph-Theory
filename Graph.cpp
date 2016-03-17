@@ -63,6 +63,13 @@ const std::set <Edge> & Graph::getEdges() const
     return _edges;
 }
 
+const std::pair<Vertex, Vertex > & Graph::getExtremities(const Edge & e) const
+{
+    assert(_extremities.find(e) != _extremities.end());
+
+    return _extremities.at(e);
+}
+
 const std::set <Edge > & Graph::getIncidents(const Vertex & v) const
 {
     assert(_incidents.find(v) != _incidents.end());

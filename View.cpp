@@ -22,6 +22,7 @@ SFMLView::SFMLView(int w, int h): // On affecte la valeur des dimensions (width 
     _vertexShape.setFillColor(Color::White);
     _vertexShape.setOutlineThickness(2);
     _vertexShape.setOutlineColor(Color::Black);
+    _selection = nullptr;
     for(int i = 0 ; i < 2 ; ++i)
     {
         _linePreview[i].color = Color::Transparent;
@@ -107,7 +108,9 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                             collision = (Mouse::getPosition(*_window).x - i->second.x) * (Mouse::getPosition(*_window).x - i->second.x)
                                         + (Mouse::getPosition(*_window).y - i->second.y) * (Mouse::getPosition(*_window).y - i->second.y)
                                         <= (VERTEX_RADIUS * VERTEX_RADIUS * 4 + VERTEX_RADIUS);
-                            i++;
+                            if(collision)
+                                _selection = &(i->first);
+                            else i++;
                         }
                         if(!collision)
                             _vertices[_graph.addVertex()] = {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
@@ -163,13 +166,25 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                 case Event::MouseMoved:
                     if(_linePreview[0].color != Color::Transparent)
                         _linePreview[1].position = Vector2f {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
+                    if(_selection != nullptr)
+                    {
+                       _vertices.at(*_selection) = Vector2f {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
+                       for(auto it = _graph.getIncidents(*_selection).begin() ; it != _graph.getIncidents(*_selection).end() ; ++it)
+                       {
+                           if(_vertices.find(_graph.getExtremities(*it).first) != _vertices.end())
+                           {
+                              if(_vertices.at(*_selection) == _vertices.at(_graph.getExtremities(*it).first))
+                                _edges.at(*it).second = Vector2f {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
+                              else _edges.at(*it).first = Vector2f {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
+                           }
+                       }
+                    }
                     break;
                 case Event::MouseButtonReleased:
                     if(event.mouseButton.button == Mouse::Right && _linePreview[0].color != Color::Transparent)
                     {
                         for(int i = 0 ; i < 2 ; ++i)
                             _linePreview[i].color = Color::Transparent;
-
                         bool collision = false;
                         auto i = _vertices.begin();
                         while(!collision && i != _vertices.end())
@@ -192,6 +207,8 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                             else i++;
                         }
                     }
+                    if(_selection != nullptr)
+                        _selection = nullptr;
                     break;
                 default:
                     break;
@@ -200,10 +217,5 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
         }
     }
     return !quit;
-}
-
-void SFMLView::synchronize()
-{
-
 }
 
