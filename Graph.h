@@ -25,6 +25,7 @@ class Graph
         bool removeVertex(const Vertex & toRemove);
         const std::set <Vertex> & getVertices() const;
         const std::set <Edge> & getEdges() const;
+        const std::set <Edge > & getIncidents(const Vertex & v) const;
         const Vertex & source(const Edge & e) const;
         const Vertex & destination(const Edge & e) const;
         int degre(const Vertex & v) const;

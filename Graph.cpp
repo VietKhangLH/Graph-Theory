@@ -17,8 +17,8 @@ const Vertex & Graph::addVertex()
 
 const Edge & Graph::addEdge(const Vertex & source, const Vertex & destination)
 {
-    assert(_vertices.find(source) == _vertices.end() &&
-           _vertices.find(destination) == _vertices.end());
+    assert(_vertices.find(source) != _vertices.end() &&
+           _vertices.find(destination) != _vertices.end());
     Edge toAdd {true};
     _edges.insert(toAdd);
     _extremities[toAdd] = make_pair(source, destination);
@@ -30,7 +30,7 @@ const Edge & Graph::addEdge(const Vertex & source, const Vertex & destination)
 
 bool Graph::removeEdge(const Edge & toRemove)
 {
-    if(_edges.find(toRemove) == _edges.end())
+    if(_edges.find(toRemove) != _edges.end())
         return false;
 
     _edges.erase(toRemove);
@@ -42,7 +42,7 @@ bool Graph::removeEdge(const Edge & toRemove)
 
 bool Graph::removeVertex(const Vertex & toRemove)
 {
-    if(_vertices.find(toRemove) == _vertices.end())
+    if(_vertices.find(toRemove) != _vertices.end())
         return false;
 
     _vertices.erase(toRemove);
@@ -61,6 +61,13 @@ const std::set <Vertex> & Graph::getVertices() const
 const std::set <Edge> & Graph::getEdges() const
 {
     return _edges;
+}
+
+const std::set <Edge > & Graph::getIncidents(const Vertex & v) const
+{
+    assert(_incidents.find(v) != _incidents.end());
+
+    return _incidents.at(v);
 }
 
 const Vertex & Graph::source(const Edge & e) const

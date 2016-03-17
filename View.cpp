@@ -66,9 +66,6 @@ void SFMLView::draw()
         _window->draw(_vertexShape);
     }
 
-    cout << _edges.size() << endl;
-
-
     _window->display(); // On affiche ce qu'il y a a afficher (dans l'ordre d'appels des draw)
 }
 
@@ -113,15 +110,11 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                             i++;
                         }
                         if(!collision)
-                            _vertices[_graph.addVertex()] = Mouse::getPosition(*_window);
+                            _vertices[_graph.addVertex()] = {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
                         break;
                     }
                     case Mouse::Middle:
                     {
-                        // Soit C un cercle de centre Ω(a;b) et de rayon r. Un point M de coordonnées (x;y) appartient à C si et seulement si
-                        // (x–a)²+(y–b)²=r²
-                        // ssi x² - 2xa + a² + y² - 2yb + b² = r²
-
                         bool collision = false;
                         auto i = _vertices.begin();
                         while(!collision && i != _vertices.end())
@@ -132,6 +125,10 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                             if(collision)
                             {
                                 _graph.removeVertex(i->first);
+                                for(auto j = _graph.getIncidents(i->first).begin() ; j != _graph.getIncidents(i->first).end() ; ++j)
+                                {
+                                    _edges.erase(*j);
+                                }
                                 _vertices.erase(i);
                             }
                             else i++;
@@ -188,7 +185,7 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                                 {
                                     sourceTrouve = Vector2f {(float)j->second.x, (float)j->second.y} ==_linePreview[0].position;
                                     if(sourceTrouve)
-                                        _edges[_graph.addEdge(i->first, j->first)] = make_pair(_linePreview[0].position, _linePreview[1].position);
+                                        _edges[_graph.addEdge(i->first, j->first)] = make_pair(_linePreview[0].position, i->second);
                                     else j++;
                                 }
                             }
