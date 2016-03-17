@@ -19,9 +19,14 @@ SFMLView::SFMLView(int w, int h): // On affecte la valeur des dimensions (width 
     _window = new RenderWindow(VideoMode(w, h, 32), "Graph Theory", Style::Close);
     _window->setFramerateLimit(FRAME_LIMIT);
     _vertexShape.setOrigin(VERTEX_RADIUS, VERTEX_RADIUS);
-    _vertexShape.setFillColor(Color::Transparent);
+    _vertexShape.setFillColor(Color::White);
     _vertexShape.setOutlineThickness(2);
     _vertexShape.setOutlineColor(Color::Black);
+    for(int i = 0 ; i < 2 ; ++i)
+    {
+        _linePreview[i].color = Color::Transparent;
+        _edgeShape[i].color = Color::Black;
+    }
 }
 
 //=======================================
@@ -47,11 +52,21 @@ void SFMLView::draw()
 {
     _window->clear(Color::White);
 
+    _window->draw(_linePreview, 2, Lines);
+
+    for(auto i = _edges.begin() ; i != _edges.end() ; ++i)
+    {
+        _edgeShape[0].position = Vector2f ((float)i->second.first.x, (float)i->second.first.y);
+        _edgeShape[1].position = Vector2f ((float)i->second.second.x, (float)i->second.second.y);
+        _window->draw(_edgeShape, 2, Lines);
+    }
     for(auto i = _vertices.begin() ; i != _vertices.end() ; ++i)
     {
         _vertexShape.setPosition((float)i->second.x, (float)i->second.y);
         _window->draw(_vertexShape);
     }
+
+    cout << _edges.size() << endl;
 
 
     _window->display(); // On affiche ce qu'il y a a afficher (dans l'ordre d'appels des draw)
@@ -87,8 +102,20 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                     switch(event.mouseButton.button)
                     {
                     case Mouse::Left:
-                        _vertices[_graph.addVertex()] = Mouse::getPosition(*_window);
+                    {
+                        bool collision = false;
+                        auto i = _vertices.begin();
+                        while(!collision && i != _vertices.end())
+                        {
+                            collision = (Mouse::getPosition(*_window).x - i->second.x) * (Mouse::getPosition(*_window).x - i->second.x)
+                                        + (Mouse::getPosition(*_window).y - i->second.y) * (Mouse::getPosition(*_window).y - i->second.y)
+                                        <= (VERTEX_RADIUS * VERTEX_RADIUS * 4 + VERTEX_RADIUS);
+                            i++;
+                        }
+                        if(!collision)
+                            _vertices[_graph.addVertex()] = Mouse::getPosition(*_window);
                         break;
+                    }
                     case Mouse::Middle:
                     {
                         // Soit C un cercle de centre Ω(a;b) et de rayon r. Un point M de coordonnées (x;y) appartient à C si et seulement si
@@ -110,10 +137,65 @@ bool SFMLView::treatEvents() // Cette methode gere les evenements clavier, elle 
                             else i++;
                         }
                     }
+                    case Mouse::Right:
+                    {
+                        bool collision = false;
+                        auto i = _vertices.begin();
+                        while(!collision && i != _vertices.end())
+                        {
+                            collision = (Mouse::getPosition(*_window).x - i->second.x) * (Mouse::getPosition(*_window).x - i->second.x)
+                                        + (Mouse::getPosition(*_window).y - i->second.y) * (Mouse::getPosition(*_window).y - i->second.y)
+                                        <= VERTEX_RADIUS * VERTEX_RADIUS;
+                            if(collision)
+                            {
+                                for(int j = 0 ; j < 2 ; ++j)
+                                {
+                                    _linePreview[j].position = Vector2f {(float)i->second.x, (float)i->second.y};
+                                    _linePreview[j].color = Color::Black;
+                                }
+                            }
+                            else i++;
+                        }
+                    }
+                    break;
                     default:
                         break;
                     }
                 }
+                break;
+                case Event::MouseMoved:
+                    if(_linePreview[0].color != Color::Transparent)
+                        _linePreview[1].position = Vector2f {(float)Mouse::getPosition(*_window).x, (float)Mouse::getPosition(*_window).y};
+                    break;
+                case Event::MouseButtonReleased:
+                    if(event.mouseButton.button == Mouse::Right && _linePreview[0].color != Color::Transparent)
+                    {
+                        for(int i = 0 ; i < 2 ; ++i)
+                            _linePreview[i].color = Color::Transparent;
+
+                        bool collision = false;
+                        auto i = _vertices.begin();
+                        while(!collision && i != _vertices.end())
+                        {
+                            collision = (Mouse::getPosition(*_window).x - i->second.x) * (Mouse::getPosition(*_window).x - i->second.x)
+                                        + (Mouse::getPosition(*_window).y - i->second.y) * (Mouse::getPosition(*_window).y - i->second.y)
+                                        <= VERTEX_RADIUS * VERTEX_RADIUS;
+                            if(collision)
+                            {
+                                bool sourceTrouve = false;
+                                auto j = _vertices.begin();
+                                while(!sourceTrouve && j != _vertices.end())
+                                {
+                                    sourceTrouve = Vector2f {(float)j->second.x, (float)j->second.y} ==_linePreview[0].position;
+                                    if(sourceTrouve)
+                                        _edges[_graph.addEdge(i->first, j->first)] = make_pair(_linePreview[0].position, _linePreview[1].position);
+                                    else j++;
+                                }
+                            }
+                            else i++;
+                        }
+                    }
+                    break;
                 default:
                     break;
                 }

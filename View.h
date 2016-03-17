@@ -16,9 +16,11 @@ private:
     Graph _graph;
 
     sf::CircleShape _vertexShape;
+    sf::Vertex _linePreview[2];
+    sf::Vertex _edgeShape[2];
 
     std::map<Vertex, sf::Vector2i > _vertices;
-   // std::map<Edge, sf::RectangleShape > _edges;
+    std::map<Edge, std::pair<sf::Vector2f, sf::Vector2f > > _edges;
 public:
     SFMLView(int w, int h);
     ~SFMLView();
